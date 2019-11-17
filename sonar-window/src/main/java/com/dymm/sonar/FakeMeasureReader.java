@@ -1,12 +1,15 @@
 package com.dymm.sonar;
-import java.util.List;
+
 import java.util.Random;
 
-public class FakeMeasureReader extends Thread {
-	List<Measure> measures;
+public class FakeMeasureReader extends Thread implements MeasureReader {
+	OnMeasureReadListener listener;
 	
-	public FakeMeasureReader(List<Measure> measures) {
-		this.measures = measures;
+	public FakeMeasureReader() {
+	}
+	
+	public String getDescription() {
+		return "Fake measure reader";
 	}
 	
 	public void run() {
@@ -14,12 +17,9 @@ public class FakeMeasureReader extends Thread {
 		Random randomGenerator = new Random();
 		
 		while(true) {
-			
-			if(measures.size()>26) {
-				measures.clear();
-				i=0;
+			if(listener!=null) {
+				listener.onMeasure(new Measure(10*i++, randomGenerator.nextInt(120)));
 			}
-			measures.add(new Measure(10*i++, randomGenerator.nextInt(120)));
 			try {
 				Thread.sleep(1 * 1000);
 			} catch (InterruptedException e) {
@@ -27,5 +27,9 @@ public class FakeMeasureReader extends Thread {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public void registerOnMeasureRead(OnMeasureReadListener listener) {
+		this.listener = listener;
 	}
 }

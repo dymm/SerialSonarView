@@ -2,6 +2,7 @@ package com.dymm.sonar;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -11,11 +12,14 @@ import javax.swing.JComboBox;
 import javax.swing.JButton;
 
 public class SonarWindow {
-	private  Timer timer;
-	List<Measure> measures;
+	
+	private List<Measure> measures;
 	private MeasureReader measureReader;
+	private MeasureProducerFactory factory;
+	
+	private Timer timer;
 	private JFrame frame;
-	JComboBox<String> comboBox;
+	private JComboBox<String> comboBox;
 	private JButton btnStartButton;
 
 	/**
@@ -35,14 +39,17 @@ public class SonarWindow {
 	}
 	
 	private void initializeData() {
-		measureReader = new MeasureReader(measures);
-		String[] ports = measureReader.getCommPorts();
-		for(String port : ports) {
-			comboBox.addItem(port);
+		measureReader = null;
+		measures = new ArrayList<Measure>();
+		
+		factory = new MeasureProducerFactory();
+		List<MeasureReader> sources = factory.getSources();
+		for(MeasureReader source : sources) {
+			comboBox.addItem(source.getDescription());
 		}
 	}
 	
-	private void initializerefreshTimer() {
+	private void initializeRefreshTimer() {
 		this.timer = new Timer(1000, new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				frame.repaint();
@@ -58,7 +65,7 @@ public class SonarWindow {
 	public SonarWindow() {
 		initialize();
 		initializeData();
-		initializerefreshTimer();
+		initializeRefreshTimer();
 	}
 
 	/**
@@ -102,8 +109,8 @@ public class SonarWindow {
 		btnStopButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if( measureReader != null ) {
-					measureReader.stopMeasure();
-					MeasureReader newMeasureReader = new MeasureReader(measures);
+					measureReader.stop();
+					SerialMeasureReader newMeasureReader = new SerialMeasureReader(measures);
 					newMeasureReader.selectPort(comboBox.getSelectedItem().toString());
 					measureReader = newMeasureReader;
 				}
